@@ -1,58 +1,128 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DATA_FILE = path.join(__dirname, 'db.json');
 
-// Разрешаем кросс-доменные запросы (CORS), чтобы фронтенд мог общаться с бэкендом
 app.use(cors());
 app.use(express.json());
-
-// Раздача статических файлов фронтенда (HTML, CSS, JS) из корня
 app.use(express.static(path.join(__dirname, './')));
 
-// Временная база данных в оперативной памяти (при перезапуске сервера обнуляется)
-let tasks = [
-  { title: "Binary conversions", desc: "5 practice exercises", done: false },
-  { title: "Boolean algebra", desc: "Truth tables & simplification", done: false },
-  { title: "Set theory basics", desc: "1 hour review + quiz", done: false },
-  { title: "Graph theory intro", desc: "Definitions & examples", done: false },
-  { title: "Combinatorics", desc: "Permutations & combinations", done: false }
-];
+// Инициализация локальной JSON базы данных
+if (!fs.existsSync(DATA_FILE)) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify({ users: {}, plans: {} }, null, 2));
+}
 
-// 1. Получить все задачи
-app.get('/api/tasks', (req, res) => {
-  res.json(tasks);
+function readDB() {
+  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+}
+
+function writeDB(data) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+// Базовые шаблоны задач по уровням
+const taskTemplates = {
+  "Beginner": [
+    { title: "Binary conversions", desc: "5 practice exercises", done: false },
+    { title: "Set theory basics", desc: "1 hour review", done: false }
+  ],
+  "Intermediate": [
+    { title: "Boolean algebra", desc: "Truth tables & simplification", done: false },
+    { title: "Graph theory intro", desc: "Definitions & examples", done: false }
+  ],
+  "Advanced": [
+    { title: "Combinatorics", desc: "Permutations & combinations", done: false },
+    { title: "Pumping Lemma", desc: "Formal languages proof", done: false }
+  ]
+};
+
+// API: Регистрация / Логин
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: "Заполните все поля" });
+  }
+
+  const db = readDB();
+
+  // Если пользователя нет — регистрируем его (для простоты)
+  if (!db.users[username]) {
+    db.users[username] = { password, createdAt: new Date() };
+    // Создаем дефолтный план
+    db.plans[username] = {
+      examName: "Discrete Math",
+      daysLeft: 10,
+      tasks: [...taskTemplates["Intermediate"]]
+    };
+    writeDB(db);
+    return res.json({ success: true, username, message: "Пользователь успешно зарегистрирован!" });
+  }
+
+  // Проверка пароля
+  if (db.users[username].password !== password) {
+    return res.status(401).json({ error: "Неверный пароль" });
+  }
+
+  res.json({ success: true, username, message: "Успешный вход!" });
 });
 
-// 2. Обновить статус задачи (выполнено / не выполнено)
+// API: Получить задачи авторизованного пользователя
+app.get('/api/tasks', (req, res) => {
+  const username = req.headers['x-user'];
+  if (!username) return res.status(401).json({ error: "Неавторизован" });
+
+  const db = readDB();
+  const userPlan = db.plans[username] || { examName: "No Exam", daysLeft: 0, tasks: [] };
+  res.json(userPlan.tasks);
+});
+
+// API: Обновить статус задачи пользователя
 app.put('/api/tasks/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  if (id >= 0 && id < tasks.length) {
-    tasks[id].done = !tasks[id].done;
-    res.json({ success: true, tasks });
+  const username = req.headers['x-user'];
+  const taskId = parseInt(req.params.id);
+  if (!username) return res.status(401).json({ error: "Неавторизован" });
+
+  const db = readDB();
+  if (db.plans[username] && db.plans[username].tasks[taskId] !== undefined) {
+    db.plans[username].tasks[taskId].done = !db.plans[username].tasks[taskId].done;
+    writeDB(db);
+    res.json({ success: true, tasks: db.plans[username].tasks });
   } else {
     res.status(404).json({ error: "Задача не найдена" });
   }
 });
 
-// 3. Генерация плана (принимает параметры из формы)
+// API: Сгенерировать новый план для пользователя
 app.post('/api/generate', (req, res) => {
-  const { examName, examDate, level, hours } = req.body;
+  const username = req.headers['x-user'];
+  if (!username) return res.status(401).json({ error: "Неавторизован" });
 
-  // Здесь можно реализовать логику изменения списка задач в зависимости от уровня
-  // Для демонстрации просто отдаем текущий список задач и параметры
-  res.json({
-    message: `План для ${examName} успешно создан!`,
-    tasks: tasks
-  });
+  const { examName, examDate, level } = req.body;
+  const examDateObj = new Date(examDate);
+  const today = new Date();
+  const diff = Math.ceil((examDateObj - today) / (1000 * 60 * 60 * 24));
+
+  const db = readDB();
+  const selectedTemplate = taskTemplates[level] || taskTemplates["Intermediate"];
+
+  db.plans[username] = {
+    examName: examName || "Exam",
+    daysLeft: diff > 0 ? diff : 10,
+    tasks: selectedTemplate.map(t => ({ ...t, done: false }))
+  };
+
+  writeDB(db);
+  res.json({ success: true, tasks: db.plans[username].tasks, daysLeft: db.plans[username].daysLeft });
 });
 
-// Все остальные запросы перенаправляем на index.html (для поддержки SPA навигации)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
+  console.log(`Сервер запущен на портах: ${PORT}`);
 });

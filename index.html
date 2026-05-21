@@ -24,7 +24,7 @@
       </nav>
 
       <div class="nav-actions">
-        <button class="login-btn">Log in</button>
+        <button class="login-btn" onclick="toggleLoginModal()">Log in</button>
         <button class="primary-btn" onclick="showPage('planner')">Get Started</button>
       </div>
     </div>
@@ -229,6 +229,7 @@
     </div>
 
     <button class="chat-btn" onclick="toggleChat()">💬</button>
+    <button class="login-btn" onclick="fakeLogin()">Log in</button>
 
     <div id="chat-panel" class="chat-panel hidden">
       <div class="chat-header">AI Study Assistant</div>
@@ -243,5 +244,16 @@
   </main>
 
   <script src="script.js"></script>
+  <div id="login-modal" class="chat-panel hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); bottom: auto; width: 350px; padding: 20px; box-shadow: 0 0 100px rgba(0,0,0,0.3);">
+    <div class="chat-header" style="display:flex; justify-content:space-between; align-items:center; border:none; padding:0 0 15px 0;">
+      <span>Войти в систему</span>
+      <button onclick="toggleLoginModal()" style="background:transparent; font-size:18px;">✕</button>
+    </div>
+    <form onsubmit="handleLogin(event)" style="display:flex; flex-direction:column; gap:12px;">
+      <input id="login-username" type="text" placeholder="Имя пользователя (Логин)" required style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
+      <input id="login-password" type="password" placeholder="Пароль" required style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
+      <button type="submit" class="primary-btn" style="width:100%; padding:12px; border-radius:8px; background:#2563eb; color:white; font-weight:600;">Войти / Создать аккаунт</button>
+    </form>
+  </div>
 </body>
 </html>

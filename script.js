@@ -1,9 +1,8 @@
 const pages = ["home-page", "planner-page", "app-page"];
 let tasks = [];
+let currentUser = localStorage.getItem('username') || null;
 
-// Инициализация при загрузке страницы
 document.addEventListener("DOMContentLoaded", () => {
-  // Установка дефолтной даты в форму (сегодня + 10 дней)
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 10);
   const examDateInput = document.getElementById("exam-date");
@@ -11,31 +10,84 @@ document.addEventListener("DOMContentLoaded", () => {
     examDateInput.value = tomorrow.toISOString().slice(0, 10);
   }
 
-  // Первичная загрузка данных
-  loadTasks();
+  updateAuthUI();
+  if (currentUser) {
+    loadTasks();
+  }
   renderCalendar();
 });
 
-// Функция переключения страниц
+function updateAuthUI() {
+  const loginBtns = document.querySelectorAll(".login-btn");
+  loginBtns.forEach(btn => {
+    if (currentUser) {
+      btn.textContent = `Выйти (${currentUser})`;
+      btn.onclick = handleLogout;
+    } else {
+      btn.textContent = "Log in";
+      btn.onclick = toggleLoginModal;
+    }
+  });
+}
+
+function toggleLoginModal() {
+  const modal = document.getElementById("login-modal");
+  if (modal) modal.classList.toggle("hidden");
+}
+
+async function handleLogin(event) {
+  event.preventDefault();
+  const username = document.getElementById("login-username").value.trim();
+  const password = document.getElementById("login-password").value;
+
+  try {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      currentUser = data.username;
+      localStorage.setItem('username', currentUser);
+      toggleLoginModal();
+      updateAuthUI();
+      await loadTasks();
+      showPage("app-page");
+    } else {
+      alert(data.error || "Ошибка авторизации");
+    }
+  } catch (err) {
+    console.error("Ошибка входа:", err);
+  }
+}
+
+function handleLogout() {
+  currentUser = null;
+  localStorage.removeItem('username');
+  tasks = [];
+  updateAuthUI();
+  showPage("home-page");
+}
+
 function showPage(page) {
   pages.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.add("hidden");
   });
-
-  // Корректно обрабатываем как "app", так и "app-page"
   const targetId = page.endsWith("-page") ? page : `${page}-page`;
   const targetPage = document.getElementById(targetId);
-  if (targetPage) {
-    targetPage.classList.remove("hidden");
-  }
+  if (targetPage) targetPage.classList.remove("hidden");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// Загрузка задач с бэкенда
 async function loadTasks() {
+  if (!currentUser) return;
   try {
-    const response = await fetch('/api/tasks');
+    const response = await fetch('/api/tasks', {
+      headers: { 'x-user': currentUser }
+    });
     tasks = await response.json();
     renderTasks();
     updateStats();
@@ -44,48 +96,58 @@ async function loadTasks() {
   }
 }
 
-// Отправка данных формы на бэкенд и генерация плана
 async function generatePlan(event) {
   event.preventDefault();
+  if (!currentUser) {
+    alert("Пожалуйста, сначала авторизуйтесь (кнопка Log in)!");
+    toggleLoginModal();
+    return;
+  }
 
   const examName = document.getElementById("exam-name").value;
   const examDateValue = document.getElementById("exam-date").value;
   const level = document.getElementById("level").value;
-  const hours = document.getElementById("hours").value;
-
-  const examDate = new Date(examDateValue);
-  const today = new Date();
-  const diff = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
-
-  document.getElementById("days-left").textContent = diff > 0 ? diff : 10;
 
   try {
-    // Отправляем параметры на бэкенд
     const response = await fetch('/api/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ examName, examDate: examDateValue, level, hours })
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user': currentUser
+      },
+      body: JSON.stringify({ examName, examDate: examDateValue, level })
     });
     const data = await response.json();
 
-    if (data.tasks) {
-      tasks = data.tasks;
+    if (data.success) {
+      document.getElementById("days-left").textContent = data.daysLeft;
+      await loadTasks();
+      showPage("app-page");
+      switchTab("dashboard");
     }
-
-    // Переключаемся на страницу приложения
-    showPage("app-page");
-    switchTab("dashboard");
-    renderTasks();
-    updateStats();
   } catch (err) {
     console.error("Ошибка при генерации плана:", err);
-    // Фолбэк на случай если бэкенд недоступен во время тестов
-    showPage("app-page");
-    switchTab("dashboard");
   }
 }
 
-// Переключение вкладок в личном кабинете
+async function toggleTask(index) {
+  if (!currentUser) return;
+  try {
+    const response = await fetch(`/api/tasks/${index}`, {
+      method: 'PUT',
+      headers: { 'x-user': currentUser }
+    });
+    const data = await response.json();
+    if (data.success) {
+      tasks = data.tasks;
+      renderTasks();
+      updateStats();
+    }
+  } catch (err) {
+    console.error("Ошибка обновления задачи:", err);
+  }
+}
+
 function switchTab(tab) {
   ["dashboard", "calendar", "statistics"].forEach(name => {
     const content = document.getElementById(name + "-content");
@@ -100,7 +162,6 @@ function switchTab(tab) {
   if (activeTab) activeTab.classList.add("active");
 }
 
-// Отображение списка задач
 function renderTasks() {
   const list = document.getElementById("task-list");
   if (!list) return;
@@ -119,7 +180,6 @@ function renderTasks() {
       </span>
       <span class="task-icon">🧾</span>
     `;
-
     list.appendChild(button);
   });
 
@@ -129,53 +189,21 @@ function renderTasks() {
   }
 }
 
-// Изменение статуса задачи через бэкенд API
-async function toggleTask(index) {
-  try {
-    const response = await fetch(`/api/tasks/${index}`, { method: 'PUT' });
-    const data = await response.json();
-    if (data.success) {
-      tasks = data.tasks;
-      renderTasks();
-      updateStats();
-    }
-  } catch (err) {
-    console.error("Ошибка обновления задачи:", err);
-    // Локальный фолбэк, если бэкенд временно отключен
-    tasks[index].done = !tasks[index].done;
-    renderTasks();
-    updateStats();
-  }
-}
-
-// Обновление блоков статистики
 function updateStats() {
   if (tasks.length === 0) return;
-
   const completed = tasks.filter(task => task.done).length;
   const percent = Math.round((completed / tasks.length) * 100);
 
-  const mainProgress = document.getElementById("main-progress");
-  if (mainProgress) mainProgress.style.width = percent + "%";
-
-  const progressText = document.getElementById("progress-text");
-  if (progressText) progressText.textContent = percent + "% complete";
-
-  const completionStat = document.getElementById("completion-stat");
-  if (completionStat) completionStat.textContent = percent + "%";
-
-  const hoursStudied = document.getElementById("hours-studied");
-  if (hoursStudied) {
-    hoursStudied.textContent = completed === 0 ? 0 : completed * 2;
-  }
+  document.getElementById("main-progress").style.width = percent + "%";
+  document.getElementById("progress-text").textContent = percent + "% complete";
+  document.getElementById("completion-stat").textContent = percent + "%";
+  document.getElementById("hours-studied").textContent = completed * 2;
 }
 
-// Генерация сетки календаря
 function renderCalendar() {
   const grid = document.getElementById("calendar-grid");
   if (!grid) return;
   grid.innerHTML = "";
-
   for (let i = 1; i <= 21; i++) {
     const div = document.createElement("div");
     div.className = "calendar-day" + (i <= 3 ? " active" : "");
@@ -184,23 +212,18 @@ function renderCalendar() {
   }
 }
 
-// Показать/скрыть чат ассистента
 function toggleChat() {
   const chatPanel = document.getElementById("chat-panel");
   if (chatPanel) chatPanel.classList.toggle("hidden");
 }
 
-// Отправка сообщений в чат
 function sendMessage(event) {
   event.preventDefault();
-
   const input = document.getElementById("chat-input");
   const text = input.value.trim();
   if (!text) return;
 
   const messages = document.getElementById("chat-messages");
-  if (!messages) return;
-
   messages.innerHTML += `<div class="message user">${text}</div>`;
   input.value = "";
   messages.scrollTop = messages.scrollHeight;
