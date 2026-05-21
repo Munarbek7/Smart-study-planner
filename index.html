@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Study Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <button class="logo" onclick="showPage('home')">
+        <span class="logo-icon">📖</span>
+        <span>AI Study Planner</span>
+      </button>
+
+      <nav class="nav-links">
+        <button onclick="showPage('home')">Features</button>
+        <button onclick="showPage('planner')">Planner</button>
+        <button onclick="showPage('app'); switchTab('dashboard')">Dashboard</button>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="login-btn">Log in</button>
+        <button class="primary-btn" onclick="showPage('planner')">Get Started</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="home-page">
+    <section class="hero">
+      <div class="bg-circle-one"></div>
+      <div class="bg-circle-two"></div>
+      <div class="bg-circle-three"></div>
+
+      <div class="container hero-grid">
+        <div>
+          <h1>AI Study Planner</h1>
+          <p>Generate a personalized exam preparation plan with AI.</p>
+          <button class="primary-btn" onclick="showPage('planner')">Generate My Plan ✨</button>
+
+          <div class="benefits">
+            <span>🛡️ Personalized Plans</span>
+            <span>⏱️ Save Time</span>
+            <span>📈 Study Smarter</span>
+          </div>
+        </div>
+
+        <div class="mockup">
+          <div class="mockup-top">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+
+          <div class="mockup-content">
+            <div class="mock-card">
+              <div class="mock-title">Today's Plan</div>
+              <div class="mini-task"><span class="mini-left"><span class="mini-circle"></span>Binary conversions</span><span class="mini-time">45m</span></div>
+              <div class="mini-task"><span class="mini-left"><span class="mini-circle"></span>Boolean algebra</span><span class="mini-time">60m</span></div>
+              <div class="mini-task"><span class="mini-left"><span class="mini-circle"></span>Set theory basics</span><span class="mini-time">60m</span></div>
+              <div class="mini-task"><span class="mini-left"><span class="mini-circle"></span>Combinatorics</span><span class="mini-time">45m</span></div>
+            </div>
+
+            <div>
+              <div class="mock-card">
+                <div class="mock-title">Progress</div>
+                <p class="muted-bold">25% complete</p>
+                <div class="progress-line"><div class="progress-fill"></div></div>
+              </div>
+              <div class="mock-card mock-calendar-card">
+                <div class="mock-title">May 2026</div>
+                <div class="small-calendar">
+                  <span>1</span><span class="selected">2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+                  <span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+                  <span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="features">
+    <div class="container feature-grid">
+      <div class="feature-card">
+        <div class="icon-box">🤖</div>
+        <div>
+          <h3>AI Plan</h3>
+          <p>Get a personalized study plan tailored to your exam, level, and available time.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="icon-box">📅</div>
+        <div>
+          <h3>Calendar View</h3>
+          <p>See your weekly schedule and stay on track with daily tasks and reminders.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="icon-box">📊</div>
+        <div>
+          <h3>Progress Tracking</h3>
+          <p>Monitor your progress, build streaks, and stay motivated with insights.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main id="planner-page" class="planner-page hidden">
+    <div class="bg-circle-one"></div>
+    <div class="bg-circle-two"></div>
+
+    <div class="container">
+      <form class="form-card" onsubmit="generatePlan(event)">
+        <h2>Set Up Your Plan</h2>
+        <p class="hint">Tell us about your exam and study goals. We'll create a personalized plan just for you.</p>
+
+        <div class="form-group">
+          <label for="exam-name">Exam Name</label>
+          <input id="exam-name" type="text" placeholder="Enter exam name" value="Discrete Math" required>
+        </div>
+
+        <div class="form-group">
+          <label for="exam-date">Exam Date</label>
+          <input id="exam-date" type="date" required>
+        </div>
+
+        <div class="form-group">
+          <label for="level">Current Level</label>
+          <select id="level">
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="hours">Study Hours Per Day</label>
+          <input id="hours" type="number" min="1" max="12" value="3" required>
+        </div>
+
+        <button class="primary-btn" type="submit">Generate Study Plan ✨</button>
+        <p class="secure-text">🔒 Your data is secure and private.</p>
+      </form>
+    </div>
+  </main>
+
+  <main id="app-page" class="app-page hidden">
+    <div class="container">
+      <div class="tabs">
+        <button class="tab-btn active" id="dashboard-tab" onclick="switchTab('dashboard')">📋 Dashboard</button>
+        <button class="tab-btn" id="calendar-tab" onclick="switchTab('calendar')">📅 Calendar</button>
+        <button class="tab-btn" id="statistics-tab" onclick="switchTab('statistics')">📊 Statistics</button>
+      </div>
+
+      <section id="dashboard-content">
+        <div class="summary-grid">
+          <div class="panel-card">
+            <div>
+              <p class="panel-label">Days Left</p>
+              <p class="panel-value" id="days-left">10</p>
+            </div>
+            <div class="panel-icon">📅</div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-progress">
+              <p class="panel-label">Progress</p>
+              <div class="progress-line"><div class="progress-fill" id="main-progress"></div></div>
+              <p class="progress-caption" id="progress-text">25% complete</p>
+            </div>
+            <div class="panel-icon panel-icon-spaced">📈</div>
+          </div>
+
+          <div class="panel-card">
+            <div>
+              <p class="panel-label">Tasks Today</p>
+              <p class="panel-value" id="tasks-today">5</p>
+            </div>
+            <div class="panel-icon">🧾</div>
+          </div>
+        </div>
+
+        <h2 class="dashboard-title">Today's Study Plan</h2>
+        <div class="task-list" id="task-list"></div>
+      </section>
+
+      <section id="calendar-content" class="hidden">
+        <h2 class="calendar-title">Weekly Calendar</h2>
+        <div class="calendar-weekdays">
+          <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+      </section>
+
+      <section id="statistics-content" class="hidden">
+        <div class="big-stats-grid">
+          <div class="stat-big-card">
+            <div>
+              <div class="stat-emoji">🔥</div>
+              <div class="stat-number">3</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+          </div>
+
+          <div class="stat-big-card">
+            <div>
+              <div class="stat-emoji">⏱️</div>
+              <div class="stat-number" id="hours-studied">6</div>
+              <div class="stat-label">Hours Studied</div>
+            </div>
+          </div>
+
+          <div class="stat-big-card">
+            <div>
+              <div class="stat-emoji">✅</div>
+              <div class="stat-number" id="completion-stat">25%</div>
+              <div class="stat-label">Completion</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <button class="chat-btn" onclick="toggleChat()">💬</button>
+
+    <div id="chat-panel" class="chat-panel hidden">
+      <div class="chat-header">AI Study Assistant</div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="message ai">Hi! Ask me to explain a topic or generate a quiz.</div>
+      </div>
+      <form class="chat-form" onsubmit="sendMessage(event)">
+        <input id="chat-input" type="text" placeholder="Ask something...">
+        <button type="submit">➤</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
