@@ -4,256 +4,268 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Study Planner</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="navbar">
-    <div class="container nav-inner">
-      <button class="logo" onclick="showPage('home')">
-        <span class="logo-icon">📖</span>
-        <span>AI Study Planner</span>
-      </button>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#" class="logo" data-page="dashboard">AI Study Planner</a>
 
-      <nav class="nav-links">
-        <button onclick="showPage('home')">Features</button>
-        <button onclick="showPage('planner')">Planner</button>
-        <button onclick="showPage('app'); switchTab('dashboard')">Dashboard</button>
+      <nav class="main-nav" id="mainNav">
+        <button class="nav-link active" data-page="dashboard">Dashboard</button>
+        <button class="nav-link" data-page="calendar">Calendar</button>
+        <button class="nav-link" data-page="new-plan">New Plan</button>
+        <button class="nav-link" data-page="timer">Timer</button>
+        <button class="nav-link" data-page="notes">Notes</button>
+        <button class="nav-link" data-page="profile">Profile</button>
       </nav>
 
-      <div class="nav-actions">
-        <button class="login-btn" onclick="toggleLoginModal()">Log in</button>
-        <button class="primary-btn" onclick="showPage('planner')">Get Started</button>
+      <div class="header-actions">
+        <button class="btn btn-outline">Sign Up</button>
+        <button class="btn btn-primary">Log In</button>
       </div>
     </div>
   </header>
 
-  <main id="home-page">
-    <section class="hero">
-      <div class="bg-circle-one"></div>
-      <div class="bg-circle-two"></div>
-      <div class="bg-circle-three"></div>
-
-      <div class="container hero-grid">
-        <div>
-          <h1>AI Study Planner</h1>
-          <p>Generate a personalized exam preparation plan with AI.</p>
-          <button class="primary-btn" onclick="showPage('planner')">Generate My Plan ✨</button>
-
-          <div class="benefits">
-            <span>🛡️ Personalized Plans</span>
-            <span>⏱️ Save Time</span>
-            <span>📈 Study Smarter</span>
-          </div>
-        </div>
-
-        <div class="mockup">
-          <div class="mockup-top">
-            <span class="dot red"></span>
-            <span class="dot yellow"></span>
-            <span class="dot green"></span>
-          </div>
-
-          <div class="mockup-content">
-            <div class="mock-card">
-              <div class="mock-title">Today's Plan</div>
-              <div class="mini-task"><span class="mini-left"><span class="mini-circle"></span>Binary conversions</span><span class="mini-time">45m</span></div>
-              <div class="mini-task"><span class="mini-left"><span class="mini-circle"></span>Boolean algebra</span><span class="mini-time">60m</span></div>
-              <div class="mini-task"><span class="mini-left"><span class="mini-circle"></span>Set theory basics</span><span class="mini-time">60m</span></div>
-              <div class="mini-task"><span class="mini-left"><span class="mini-circle"></span>Combinatorics</span><span class="mini-time">45m</span></div>
-            </div>
-
-            <div>
-              <div class="mock-card">
-                <div class="mock-title">Progress</div>
-                <p class="muted-bold">25% complete</p>
-                <div class="progress-line"><div class="progress-fill"></div></div>
-              </div>
-              <div class="mock-card mock-calendar-card">
-                <div class="mock-title">May 2026</div>
-                <div class="small-calendar">
-                  <span>1</span><span class="selected">2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
-                  <span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
-                  <span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <section class="features">
-    <div class="container feature-grid">
-      <div class="feature-card">
-        <div class="icon-box">🤖</div>
-        <div>
-          <h3>AI Plan</h3>
-          <p>Get a personalized study plan tailored to your exam, level, and available time.</p>
-        </div>
-      </div>
-      <div class="feature-card">
-        <div class="icon-box">📅</div>
-        <div>
-          <h3>Calendar View</h3>
-          <p>See your weekly schedule and stay on track with daily tasks and reminders.</p>
-        </div>
-      </div>
-      <div class="feature-card">
-        <div class="icon-box">📊</div>
-        <div>
-          <h3>Progress Tracking</h3>
-          <p>Monitor your progress, build streaks, and stay motivated with insights.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <main id="planner-page" class="planner-page hidden">
-    <div class="bg-circle-one"></div>
-    <div class="bg-circle-two"></div>
-
+  <main class="site-main">
     <div class="container">
-      <form class="form-card" onsubmit="generatePlan(event)">
-        <h2>Set Up Your Plan</h2>
-        <p class="hint">Tell us about your exam and study goals. We'll create a personalized plan just for you.</p>
-
-        <div class="form-group">
-          <label for="exam-name">Exam Name</label>
-          <input id="exam-name" type="text" placeholder="Enter exam name" value="Discrete Math" required>
-        </div>
-
-        <div class="form-group">
-          <label for="exam-date">Exam Date</label>
-          <input id="exam-date" type="date" required>
-        </div>
-
-        <div class="form-group">
-          <label for="level">Current Level</label>
-          <select id="level">
-            <option>Beginner</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="hours">Study Hours Per Day</label>
-          <input id="hours" type="number" min="1" max="12" value="3" required>
-        </div>
-
-        <button class="primary-btn" type="submit">Generate Study Plan ✨</button>
-        <p class="secure-text">🔒 Your data is secure and private.</p>
-      </form>
-    </div>
-  </main>
-
-  <main id="app-page" class="app-page hidden">
-    <div class="container">
-      <div class="tabs">
-        <button class="tab-btn active" id="dashboard-tab" onclick="switchTab('dashboard')">📋 Dashboard</button>
-        <button class="tab-btn" id="calendar-tab" onclick="switchTab('calendar')">📅 Calendar</button>
-        <button class="tab-btn" id="statistics-tab" onclick="switchTab('statistics')">📊 Statistics</button>
-      </div>
-
-      <section id="dashboard-content">
-        <div class="summary-grid">
-          <div class="panel-card">
-            <div>
-              <p class="panel-label">Days Left</p>
-              <p class="panel-value" id="days-left">10</p>
-            </div>
-            <div class="panel-icon">📅</div>
+      <section class="page active-page" id="dashboard">
+        <div class="cta-banner">
+          <div class="cta-copy">
+            <h2>Want to save your progress across devices?</h2>
+            <p>Create an account to sync your study plans and continue learning anywhere.</p>
           </div>
 
-          <div class="panel-card">
-            <div class="panel-progress">
-              <p class="panel-label">Progress</p>
-              <div class="progress-line"><div class="progress-fill" id="main-progress"></div></div>
-              <p class="progress-caption" id="progress-text">25% complete</p>
-            </div>
-            <div class="panel-icon panel-icon-spaced">📈</div>
-          </div>
-
-          <div class="panel-card">
-            <div>
-              <p class="panel-label">Tasks Today</p>
-              <p class="panel-value" id="tasks-today">5</p>
-            </div>
-            <div class="panel-icon">🧾</div>
+          <div class="cta-actions">
+            <button class="btn btn-primary large">Create Account</button>
+            <button class="btn btn-outline large">Continue as Guest</button>
           </div>
         </div>
 
-        <h2 class="dashboard-title">Today's Study Plan</h2>
-        <div class="task-list" id="task-list"></div>
+        <h1 class="page-title">Dashboard</h1>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span class="stat-label">Days Left</span>
+            <strong class="stat-value" id="daysLeft">10</strong>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Progress</span>
+            <strong class="stat-value" id="progressValue">0%</strong>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Today's Tasks</span>
+            <strong class="stat-value" id="tasksCount">3</strong>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Study Hours</span>
+            <strong class="stat-value" id="studyHoursValue">3h</strong>
+          </article>
+        </div>
+
+        <article class="panel-card tasks-panel">
+          <h2 class="panel-title">Today's Tasks — <span id="todayTopicTitle">Binary Conversions</span></h2>
+
+          <div class="task-list" id="taskList">
+            <label class="task-item">
+              <input type="checkbox" class="task-check" />
+              <span>Learn basic binary rules</span>
+            </label>
+
+            <label class="task-item">
+              <input type="checkbox" class="task-check" />
+              <span>Solve 10 practice problems</span>
+            </label>
+
+            <label class="task-item">
+              <input type="checkbox" class="task-check" />
+              <span>Review mistakes</span>
+            </label>
+          </div>
+        </article>
       </section>
 
-      <section id="calendar-content" class="hidden">
-        <h2 class="calendar-title">Weekly Calendar</h2>
-        <div class="calendar-weekdays">
-          <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
-        </div>
-        <div class="calendar-grid" id="calendar-grid"></div>
+      <section class="page" id="calendar">
+        <h1 class="page-title calendar-title">Study Calendar</h1>
+        <div class="calendar-grid" id="calendarGrid"></div>
       </section>
 
-      <section id="statistics-content" class="hidden">
-        <div class="big-stats-grid">
-          <div class="stat-big-card">
-            <div>
-              <div class="stat-emoji">🔥</div>
-              <div class="stat-number">3</div>
-              <div class="stat-label">Day Streak</div>
+      <section class="page" id="new-plan">
+        <div class="form-shell">
+          <h1 class="page-title">Create Your Study Plan</h1>
+          <p class="page-subtitle">Enter your exam details and the AI will generate a personalized plan.</p>
+
+          <form id="planForm" class="planner-form">
+            <label class="form-group">
+              <span>Exam Name</span>
+              <input type="text" id="examName" value="Discrete Math Exam" />
+            </label>
+
+            <label class="form-group">
+              <span>Exam Date</span>
+              <div class="input-with-icon">
+                <input type="text" id="examDate" value="01.06.2026" />
+                <span class="input-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M8 3V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M16 3V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M4 10H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </span>
+              </div>
+            </label>
+
+            <label class="form-group">
+              <span>Current Level</span>
+              <select id="level">
+                <option selected>Beginner</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+              </select>
+            </label>
+
+            <label class="form-group">
+              <span>Study Hours Per Day</span>
+              <input type="number" id="hoursPerDay" value="3" min="1" max="12" />
+            </label>
+
+            <div class="form-group">
+              <span>Topics to Study</span>
+              <div class="topic-tags" id="topicTags">
+                <button type="button" class="topic-tag selected">Binary conversions</button>
+                <button type="button" class="topic-tag selected">Modular arithmetic</button>
+                <button type="button" class="topic-tag selected">Mathematical induction</button>
+                <button type="button" class="topic-tag selected">Counting</button>
+                <button type="button" class="topic-tag selected">Graph theory</button>
+              </div>
             </div>
+
+            <button type="submit" class="btn btn-primary generate-btn">Generate My Plan</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="page" id="timer">
+        <div class="timer-page">
+          <h1 class="page-title center">Focus Timer</h1>
+          <div class="timer-circle"><span id="timerValue">25:00</span></div>
+
+          <div class="timer-controls">
+            <button class="btn btn-primary timer-btn" id="startTimer">Start</button>
+            <button class="btn btn-soft timer-btn" id="pauseTimer">Pause</button>
+            <button class="btn btn-neutral timer-btn" id="resetTimer">Reset</button>
           </div>
 
-          <div class="stat-big-card">
-            <div>
-              <div class="stat-emoji">⏱️</div>
-              <div class="stat-number" id="hours-studied">6</div>
-              <div class="stat-label">Hours Studied</div>
-            </div>
-          </div>
+          <article class="focus-card">
+            <span class="focus-label">Today's Focus Task</span>
+            <strong id="focusTaskText">Binary Conversions – Practice Set</strong>
+          </article>
 
-          <div class="stat-big-card">
-            <div>
-              <div class="stat-emoji">✅</div>
-              <div class="stat-number" id="completion-stat">25%</div>
-              <div class="stat-label">Completion</div>
-            </div>
+          <div class="tip-card">
+            <span class="tip-icon">💡</span>
+            <span>Tip: Take a 5–minute break after each 25–minute session.</span>
           </div>
         </div>
       </section>
-    </div>
 
-    <button class="chat-btn" onclick="toggleChat()">💬</button>
-    <button class="login-btn" onclick="fakeLogin()">Log in</button>
+      <section class="page" id="notes">
+        <h1 class="page-title notes-title">Study Notes</h1>
 
-    <div id="chat-panel" class="chat-panel hidden">
-      <div class="chat-header">AI Study Assistant</div>
-      <div class="chat-messages" id="chat-messages">
-        <div class="message ai">Hi! Ask me to explain a topic or generate a quiz.</div>
-      </div>
-      <form class="chat-form" onsubmit="sendMessage(event)">
-        <input id="chat-input" type="text" placeholder="Ask something...">
-        <button type="submit">➤</button>
-      </form>
+        <div class="notes-layout">
+          <article class="note-editor panel-card">
+            <h2 class="panel-title">New Note</h2>
+            <form id="noteForm">
+              <input type="text" id="noteTitle" class="note-input" placeholder="Note title..." />
+              <textarea id="noteText" class="note-textarea" placeholder="Write your note..."></textarea>
+              <button type="submit" class="btn btn-primary save-note-btn">Save Note</button>
+            </form>
+          </article>
+
+          <div class="saved-notes">
+            <h2 class="panel-title">Saved Notes</h2>
+            <div id="notesList" class="notes-list empty">No notes yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="profile">
+        <h1 class="page-title">My Account</h1>
+
+        <article class="profile-main-card">
+          <div class="profile-left">
+            <div class="avatar-wrap">
+              <div class="profile-avatar">
+                <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
+                  <circle cx="60" cy="60" r="60" fill="#E5E7EB"></circle>
+                  <circle cx="60" cy="43" r="17" fill="#9CA3AF"></circle>
+                  <path d="M29 93c4-16 18-26 31-26s27 10 31 26" fill="#9CA3AF"></path>
+                </svg>
+              </div>
+            </div>
+
+            <h2 class="profile-name">Alex Student</h2>
+            <p class="profile-email">alex@student.com</p>
+            <p class="profile-role">University Student</p>
+
+            <div class="current-goal">
+              <span>Current Goal</span>
+              <strong id="currentGoalText">Prepare for Discrete Math Exam</strong>
+            </div>
+
+            <button class="btn btn-soft-light edit-btn">Edit Profile</button>
+          </div>
+
+          <div class="profile-right">
+            <div class="info-block">
+              <span>Current Subject</span>
+              <strong id="profileSubject">Discrete Math</strong>
+            </div>
+            <div class="info-block">
+              <span>Exam Date</span>
+              <strong id="profileExamDate">June 1, 2026</strong>
+            </div>
+            <div class="info-block">
+              <span>Days Left</span>
+              <strong id="profileDaysLeft">10 days</strong>
+            </div>
+            <div class="info-block">
+              <span>Current Level</span>
+              <strong id="profileLevel">Beginner</strong>
+            </div>
+            <div class="info-block">
+              <span>Daily Study Time</span>
+              <strong id="profileStudyTime">3 hours/day</strong>
+            </div>
+            <div class="progress-block">
+              <span>Overall Progress</span>
+              <div class="progress-row">
+                <div class="progress-track"><div class="progress-fill" id="profileProgressFill" style="width: 40%;"></div></div>
+                <strong id="profileProgressText">40%</strong>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <h2 class="section-title">Learning Statistics</h2>
+
+        <div class="learning-stats">
+          <article class="learning-card"><strong id="completedTopicsStat">3</strong><span>Completed Topics</span></article>
+          <article class="learning-card"><strong>5</strong><span>Study Streak</span></article>
+          <article class="learning-card"><strong id="totalHoursStat">12h</strong><span>Total Hours</span></article>
+          <article class="learning-card"><strong>80%</strong><span>Average Score</span></article>
+          <article class="learning-card"><strong id="tasksDoneStat">18</strong><span>Tasks Done</span></article>
+        </div>
+      </section>
     </div>
   </main>
 
   <script src="script.js"></script>
-  <div id="login-modal" class="chat-panel hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); bottom: auto; width: 350px; padding: 20px; box-shadow: 0 0 100px rgba(0,0,0,0.3);">
-    <div class="chat-header" style="display:flex; justify-content:space-between; align-items:center; border:none; padding:0 0 15px 0;">
-      <span>Войти в систему</span>
-      <button onclick="toggleLoginModal()" style="background:transparent; font-size:18px;">✕</button>
-    </div>
-    <form onsubmit="handleLogin(event)" style="display:flex; flex-direction:column; gap:12px;">
-      <input id="login-username" type="text" placeholder="Имя пользователя (Логин)" required style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
-      <input id="login-password" type="password" placeholder="Пароль" required style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
-      <button type="submit" class="primary-btn" style="width:100%; padding:12px; border-radius:8px; background:#2563eb; color:white; font-weight:600;">Войти / Создать аккаунт</button>
-    </form>
-  </div>
 </body>
 </html>

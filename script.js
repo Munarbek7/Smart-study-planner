@@ -1,235 +1,260 @@
-const pages = ["home-page", "planner-page", "app-page"];
-let tasks = [];
-let currentUser = localStorage.getItem('username') || null;
+const pages = document.querySelectorAll(".page");
+const navLinks = document.querySelectorAll("[data-page]");
+const taskList = document.getElementById("taskList");
+const progressValue = document.getElementById("progressValue");
+const tasksCount = document.getElementById("tasksCount");
+const todayTopicTitle = document.getElementById("todayTopicTitle");
+const focusTaskText = document.getElementById("focusTaskText");
+const daysLeftEl = document.getElementById("daysLeft");
+const profileDaysLeft = document.getElementById("profileDaysLeft");
+const profileSubject = document.getElementById("profileSubject");
+const profileExamDate = document.getElementById("profileExamDate");
+const profileLevel = document.getElementById("profileLevel");
+const profileStudyTime = document.getElementById("profileStudyTime");
+const currentGoalText = document.getElementById("currentGoalText");
+const studyHoursValue = document.getElementById("studyHoursValue");
+const completedTopicsStat = document.getElementById("completedTopicsStat");
+const totalHoursStat = document.getElementById("totalHoursStat");
+const tasksDoneStat = document.getElementById("tasksDoneStat");
+const profileProgressFill = document.getElementById("profileProgressFill");
+const profileProgressText = document.getElementById("profileProgressText");
 
-document.addEventListener("DOMContentLoaded", () => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 10);
-  const examDateInput = document.getElementById("exam-date");
-  if (examDateInput) {
-    examDateInput.value = tomorrow.toISOString().slice(0, 10);
-  }
+const defaultPlan = [
+  { short: "Binary", full: "Binary Conversions", tasks: ["Learn basic binary rules", "Solve 10 practice problems", "Review mistakes"] },
+  { short: "Modular", full: "Modular Arithmetic", tasks: ["Understand modulo basics", "Solve 8 congruence questions", "Check your answers"] },
+  { short: "Induction", full: "Mathematical Induction", tasks: ["Study the base case", "Write the induction step", "Practice one full proof"] },
+  { short: "Counting", full: "Counting", tasks: ["Review the product rule", "Solve 6 counting tasks", "Summarize common patterns"] },
+  { short: "Graphs", full: "Graph Theory", tasks: ["Learn key graph terms", "Practice vertex and edge questions", "Review a graph example"] }
+];
 
-  updateAuthUI();
-  if (currentUser) {
-    loadTasks();
-  }
-  renderCalendar();
+let studyPlan = [...defaultPlan];
+let selectedDay = 0;
+
+function showPage(pageId) {
+  pages.forEach((page) => page.classList.toggle("active-page", page.id === pageId));
+  navLinks.forEach((link) => {
+    if (link.classList.contains("nav-link")) {
+      link.classList.toggle("active", link.dataset.page === pageId);
+    }
+  });
+}
+
+navLinks.forEach((link) => {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    const pageId = link.dataset.page;
+    if (pageId) showPage(pageId);
+  });
 });
 
-function updateAuthUI() {
-  const loginBtns = document.querySelectorAll(".login-btn");
-  loginBtns.forEach(btn => {
-    if (currentUser) {
-      btn.textContent = `Выйти (${currentUser})`;
-      btn.onclick = handleLogout;
-    } else {
-      btn.textContent = "Log in";
-      btn.onclick = toggleLoginModal;
-    }
+function renderTasks(dayIndex = 0) {
+  const plan = studyPlan[dayIndex];
+  todayTopicTitle.textContent = plan.full;
+  focusTaskText.textContent = `${plan.full} – Practice Set`;
+  tasksCount.textContent = plan.tasks.length;
+  taskList.innerHTML = "";
+
+  plan.tasks.forEach((task) => {
+    const label = document.createElement("label");
+    label.className = "task-item";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.className = "task-check";
+
+    const span = document.createElement("span");
+    span.textContent = task;
+
+    input.addEventListener("change", () => {
+      label.classList.toggle("completed", input.checked);
+      updateTaskProgress();
+    });
+
+    label.appendChild(input);
+    label.appendChild(span);
+    taskList.appendChild(label);
+  });
+
+  updateTaskProgress();
+}
+
+function updateTaskProgress() {
+  const checks = taskList.querySelectorAll('input[type="checkbox"]');
+  const total = checks.length || 1;
+  const done = [...checks].filter((check) => check.checked).length;
+  const percent = Math.round((done / total) * 100);
+  progressValue.textContent = `${percent}%`;
+
+  const overall = Math.max(40, percent);
+  profileProgressFill.style.width = `${overall}%`;
+  profileProgressText.textContent = `${overall}%`;
+  tasksDoneStat.textContent = String(18 + done);
+}
+
+const calendarGrid = document.getElementById("calendarGrid");
+
+function renderCalendar() {
+  calendarGrid.innerHTML = "";
+
+  studyPlan.forEach((item, index) => {
+    const button = document.createElement("button");
+    button.className = `day-card ${index === selectedDay ? "active" : ""}`;
+    button.dataset.day = String(index);
+
+    button.innerHTML = `
+      <span class="day-label">Day ${index + 1}</span>
+      <strong>${item.short}</strong>
+      ${index === 0 ? '<span class="day-check">✓</span>' : ""}
+    `;
+
+    button.addEventListener("click", () => {
+      selectedDay = index;
+      renderCalendar();
+      renderTasks(index);
+      showPage("dashboard");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    calendarGrid.appendChild(button);
   });
 }
 
-function toggleLoginModal() {
-  const modal = document.getElementById("login-modal");
-  if (modal) modal.classList.toggle("hidden");
+document.querySelectorAll(".topic-tag").forEach((tag) => {
+  tag.addEventListener("click", () => tag.classList.toggle("selected"));
+});
+
+const planForm = document.getElementById("planForm");
+
+function parseDateString(value) {
+  const [day, month, year] = value.split(".");
+  if (!day || !month || !year) return null;
+  return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
-async function handleLogin(event) {
+function formatLongDate(value) {
+  const date = parseDateString(value);
+  if (!date) return value;
+  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+function calculateDaysLeft(value) {
+  const examDate = parseDateString(value);
+  if (!examDate) return 10;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  examDate.setHours(0, 0, 0, 0);
+  const diff = examDate.getTime() - today.getTime();
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  return days > 0 ? days : 0;
+}
+
+planForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  const username = document.getElementById("login-username").value.trim();
-  const password = document.getElementById("login-password").value;
 
-  try {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await response.json();
+  const examName = document.getElementById("examName").value.trim() || "Discrete Math Exam";
+  const examDate = document.getElementById("examDate").value.trim() || "01.06.2026";
+  const level = document.getElementById("level").value;
+  const hours = document.getElementById("hoursPerDay").value || "3";
+  const selectedTopics = [...document.querySelectorAll(".topic-tag.selected")].map((tag) => tag.textContent.trim());
 
-    if (response.ok && data.success) {
-      currentUser = data.username;
-      localStorage.setItem('username', currentUser);
-      toggleLoginModal();
-      updateAuthUI();
-      await loadTasks();
-      showPage("app-page");
-    } else {
-      alert(data.error || "Ошибка авторизации");
-    }
-  } catch (err) {
-    console.error("Ошибка входа:", err);
-  }
-}
-
-function handleLogout() {
-  currentUser = null;
-  localStorage.removeItem('username');
-  tasks = [];
-  updateAuthUI();
-  showPage("home-page");
-}
-
-function showPage(page) {
-  pages.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.add("hidden");
-  });
-  const targetId = page.endsWith("-page") ? page : `${page}-page`;
-  const targetPage = document.getElementById(targetId);
-  if (targetPage) targetPage.classList.remove("hidden");
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-async function loadTasks() {
-  if (!currentUser) return;
-  try {
-    const response = await fetch('/api/tasks', {
-      headers: { 'x-user': currentUser }
-    });
-    tasks = await response.json();
-    renderTasks();
-    updateStats();
-  } catch (err) {
-    console.error("Ошибка загрузки задач:", err);
-  }
-}
-
-async function generatePlan(event) {
-  event.preventDefault();
-  if (!currentUser) {
-    alert("Пожалуйста, сначала авторизуйтесь (кнопка Log in)!");
-    toggleLoginModal();
+  if (selectedTopics.length === 0) {
+    alert("Please select at least one topic.");
     return;
   }
 
-  const examName = document.getElementById("exam-name").value;
-  const examDateValue = document.getElementById("exam-date").value;
-  const level = document.getElementById("level").value;
+  studyPlan = selectedTopics.map((topic) => ({
+    short: topic.split(" ")[0],
+    full: titleCase(topic),
+    tasks: [`Learn ${topic.toLowerCase()}`, "Solve practice problems", "Review mistakes"]
+  }));
 
-  try {
-    const response = await fetch('/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user': currentUser
-      },
-      body: JSON.stringify({ examName, examDate: examDateValue, level })
-    });
-    const data = await response.json();
+  selectedDay = 0;
+  const subject = examName.replace(/exam/i, "").trim();
+  const daysLeft = calculateDaysLeft(examDate);
 
-    if (data.success) {
-      document.getElementById("days-left").textContent = data.daysLeft;
-      await loadTasks();
-      showPage("app-page");
-      switchTab("dashboard");
-    }
-  } catch (err) {
-    console.error("Ошибка при генерации плана:", err);
-  }
+  daysLeftEl.textContent = String(daysLeft);
+  profileDaysLeft.textContent = `${daysLeft} days`;
+  profileSubject.textContent = subject || "Discrete Math";
+  profileExamDate.textContent = formatLongDate(examDate);
+  profileLevel.textContent = level;
+  profileStudyTime.textContent = `${hours} hours/day`;
+  studyHoursValue.textContent = `${hours}h`;
+  currentGoalText.textContent = `Prepare for ${examName}`;
+  totalHoursStat.textContent = `${Number(hours) * 4}h`;
+  completedTopicsStat.textContent = String(Math.min(3, studyPlan.length));
+
+  renderTasks(0);
+  renderCalendar();
+  showPage("dashboard");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+function titleCase(text) {
+  return text.toLowerCase().split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 }
 
-async function toggleTask(index) {
-  if (!currentUser) return;
-  try {
-    const response = await fetch(`/api/tasks/${index}`, {
-      method: 'PUT',
-      headers: { 'x-user': currentUser }
-    });
-    const data = await response.json();
-    if (data.success) {
-      tasks = data.tasks;
-      renderTasks();
-      updateStats();
-    }
-  } catch (err) {
-    console.error("Ошибка обновления задачи:", err);
-  }
-}
+const noteForm = document.getElementById("noteForm");
+const noteTitle = document.getElementById("noteTitle");
+const noteText = document.getElementById("noteText");
+const notesList = document.getElementById("notesList");
 
-function switchTab(tab) {
-  ["dashboard", "calendar", "statistics"].forEach(name => {
-    const content = document.getElementById(name + "-content");
-    const tabBtn = document.getElementById(name + "-tab");
-    if (content) content.classList.add("hidden");
-    if (tabBtn) tabBtn.classList.remove("active");
-  });
-
-  const activeContent = document.getElementById(tab + "-content");
-  const activeTab = document.getElementById(tab + "-tab");
-  if (activeContent) activeContent.classList.remove("hidden");
-  if (activeTab) activeTab.classList.add("active");
-}
-
-function renderTasks() {
-  const list = document.getElementById("task-list");
-  if (!list) return;
-  list.innerHTML = "";
-
-  tasks.forEach((task, index) => {
-    const button = document.createElement("button");
-    button.className = "task-row" + (task.done ? " done" : "");
-    button.onclick = () => toggleTask(index);
-
-    button.innerHTML = `
-      <span class="checkbox">${task.done ? "✓" : ""}</span>
-      <span class="task-text">
-        <span class="task-title">${task.title}</span>
-        <span class="task-desc">${task.desc}</span>
-      </span>
-      <span class="task-icon">🧾</span>
-    `;
-    list.appendChild(button);
-  });
-
-  const tasksTodayInput = document.getElementById("tasks-today");
-  if (tasksTodayInput) {
-    tasksTodayInput.textContent = tasks.filter(task => !task.done).length;
-  }
-}
-
-function updateStats() {
-  if (tasks.length === 0) return;
-  const completed = tasks.filter(task => task.done).length;
-  const percent = Math.round((completed / tasks.length) * 100);
-
-  document.getElementById("main-progress").style.width = percent + "%";
-  document.getElementById("progress-text").textContent = percent + "% complete";
-  document.getElementById("completion-stat").textContent = percent + "%";
-  document.getElementById("hours-studied").textContent = completed * 2;
-}
-
-function renderCalendar() {
-  const grid = document.getElementById("calendar-grid");
-  if (!grid) return;
-  grid.innerHTML = "";
-  for (let i = 1; i <= 21; i++) {
-    const div = document.createElement("div");
-    div.className = "calendar-day" + (i <= 3 ? " active" : "");
-    div.textContent = i;
-    grid.appendChild(div);
-  }
-}
-
-function toggleChat() {
-  const chatPanel = document.getElementById("chat-panel");
-  if (chatPanel) chatPanel.classList.toggle("hidden");
-}
-
-function sendMessage(event) {
+noteForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  const input = document.getElementById("chat-input");
-  const text = input.value.trim();
-  if (!text) return;
+  const title = noteTitle.value.trim();
+  const text = noteText.value.trim();
+  if (!title && !text) return;
 
-  const messages = document.getElementById("chat-messages");
-  messages.innerHTML += `<div class="message user">${text}</div>`;
-  input.value = "";
-  messages.scrollTop = messages.scrollHeight;
+  if (notesList.classList.contains("empty")) {
+    notesList.classList.remove("empty");
+    notesList.innerHTML = "";
+  }
 
-  setTimeout(() => {
-    messages.innerHTML += `<div class="message ai">I can help with that. Try reviewing examples first, then solve 5 practice problems.</div>`;
-    messages.scrollTop = messages.scrollHeight;
-  }, 500);
+  const card = document.createElement("article");
+  card.className = "saved-note-card";
+  card.innerHTML = `<h3>${title || "Untitled Note"}</h3><p>${text || "No text provided."}</p>`;
+  notesList.prepend(card);
+  noteTitle.value = "";
+  noteText.value = "";
+});
+
+const timerValue = document.getElementById("timerValue");
+const startTimerBtn = document.getElementById("startTimer");
+const pauseTimerBtn = document.getElementById("pauseTimer");
+const resetTimerBtn = document.getElementById("resetTimer");
+let timerSeconds = 25 * 60;
+let timerInterval = null;
+
+function updateTimerUI() {
+  const minutes = String(Math.floor(timerSeconds / 60)).padStart(2, "0");
+  const seconds = String(timerSeconds % 60).padStart(2, "0");
+  timerValue.textContent = `${minutes}:${seconds}`;
 }
+
+startTimerBtn.addEventListener("click", () => {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    if (timerSeconds > 0) {
+      timerSeconds--;
+      updateTimerUI();
+    } else {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }, 1000);
+});
+
+pauseTimerBtn.addEventListener("click", () => {
+  clearInterval(timerInterval);
+  timerInterval = null;
+});
+
+resetTimerBtn.addEventListener("click", () => {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timerSeconds = 25 * 60;
+  updateTimerUI();
+});
+
+renderTasks(selectedDay);
+renderCalendar();
+updateTimerUI();
